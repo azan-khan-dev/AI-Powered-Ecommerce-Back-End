@@ -44,4 +44,20 @@ const isAuthenticated = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { isAuthenticated };
+// admin only middleware
+// ---------------------
+const isAdmin = asyncHandler(async (req, res, next) => {
+  // First check if user is authenticated
+  await isAuthenticated(req, res, (err) => {
+    if (err) return next(err);
+  });
+
+  // Then check if user is admin
+  if (!req.user || req.user.role !== "admin") {
+    return next(new CustomError(403, "Access denied. Admin role required."));
+  }
+
+  next();
+});
+
+export { isAuthenticated, isAdmin };

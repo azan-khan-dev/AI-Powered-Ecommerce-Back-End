@@ -135,7 +135,6 @@ export const removeMultipleFromCloudinary = async (
   resourceType
 ) => {
   try {
-    const resourceType = det;
     const response = await cloudinary.v2.api.delete_resources(public_ids, {
       resource_type: resourceType,
     });
