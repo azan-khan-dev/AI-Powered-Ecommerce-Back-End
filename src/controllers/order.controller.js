@@ -3,6 +3,9 @@ import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { CustomError } from "../utils/customError.js";
+import { createCheckoutSession } from "../utils/stripe.js";
+import { getEnv } from "../configs/config.js";
+import { PaymentIntent } from "../models/paymentIntent.model.js";
 
 // Create new order (client side)
 const createOrder = asyncHandler(async (req, res, next) => {
@@ -14,9 +17,10 @@ const createOrder = asyncHandler(async (req, res, next) => {
   const {
     items,
     shippingAddress,
-    paymentMethod = "card",
-    orderNotes,
+    paymentMethod,
   } = req.body;
+
+  console.log("req.body", req.body);
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return next(new CustomError(400, "Please provide order items"));
@@ -31,13 +35,13 @@ const createOrder = asyncHandler(async (req, res, next) => {
   const orderItems = [];
 
   for (const item of items) {
-    if (!item.product || !item.quantity || item.quantity < 1) {
+    if (!item.id || !item.quantity || item.quantity < 1) {
       return next(new CustomError(400, "Invalid item data"));
     }
 
-    const product = await Product.findById(item.product);
+    const product = await Product.findById(item.id);
     if (!product) {
-      return next(new CustomError(404, `Product ${item.product} not found`));
+      return next(new CustomError(404, `Product ${item.id} not found`));
     }
 
     if (product.stock < item.quantity) {
@@ -66,18 +70,50 @@ const createOrder = asyncHandler(async (req, res, next) => {
     items: orderItems,
     totalAmount,
     shippingAddress,
-    paymentMethod,
-    orderNotes,
+    paymentMethod : paymentMethod === "online" ? "online" : "cash_on_delivery",
   });
 
   // Populate customer and product details
   await newOrder.populate("customer", "name email");
 
-  res.status(201).json({
-    success: true,
-    message: "Order placed successfully",
-    data: newOrder,
-  });
+  if (paymentMethod === "online") {
+    const metaData = {
+      orderId: newOrder._id.toString(),
+      customerId: customerId.toString(),
+      totalAmount: totalAmount.toString(),
+      shippingAddress: JSON.stringify(shippingAddress),
+      paymentMethod: paymentMethod.toString(),
+    }
+    const response = await createCheckoutSession(orderItems, `${getEnv("FRONTEND_URL")}/payment/success`, `${getEnv("FRONTEND_URL")}/payment/cancel`, metaData);
+    if (!response.success) {
+      return next(new CustomError(500, response.error));
+    }
+    const paymentIntent = await PaymentIntent.create({
+      order: newOrder._id,
+      intentId: response.sessionId,
+      totalAmount,
+    });
+    return res.status(201).json({
+      success: true,
+      message: "Order placed successfully",
+      data: newOrder,
+      paymentIntent,
+      sessionUrl: response.sessionUrl,
+    });
+  } else {
+    const paymentIntent = await PaymentIntent.create({
+      order: newOrder._id,
+      intentId: "cash_on_delivery",
+      totalAmount,
+    });
+    await newOrder.save();
+    await newOrder.populate("customer", "name email");
+    return res.status(201).json({
+      success: true,
+      message: "Order placed successfully",
+      data: newOrder,paymentIntent,
+    });
+  }
 });
 
 // Get user's own orders (client side)

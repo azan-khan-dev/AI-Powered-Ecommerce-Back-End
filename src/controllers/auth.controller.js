@@ -110,7 +110,7 @@ const signup = asyncHandler(async (req, res, next) =>
     email,
     password,
     phone,
-    role: "admin",
+    role: "client",
     gender,
     companyName,
     designation,

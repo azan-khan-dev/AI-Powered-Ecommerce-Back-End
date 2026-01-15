@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import { Counter } from "./counter.model.js";
+
+// Ensure Counter model is registered
+Counter;
 
 // Order Item Schema
 const orderItemSchema = new mongoose.Schema({
@@ -28,11 +32,18 @@ const orderItemSchema = new mongoose.Schema({
 
 // Shipping Address Schema
 const shippingAddressSchema = new mongoose.Schema({
+  customer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Auth",
+    required: true,
+  },
   street: { type: String, required: true },
   city: { type: String, required: true },
   state: { type: String, required: true },
   zipCode: { type: String, required: true },
   country: { type: String, required: true },
+  phoneNumber: { type: String, required: true },
+  emailAddress: { type: String, required: true },
 });
 
 // Order Schema
@@ -66,16 +77,8 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["card", "paypal", "bank_transfer", "cash_on_delivery"],
-      default: "card",
-    },
-    orderNotes: {
-      type: String,
-      trim: true,
-    },
-    trackingNumber: {
-      type: String,
-      trim: true,
+      enum: ["online", "cash_on_delivery"],
+      default: "online",
     },
   },
   { timestamps: true }
@@ -89,7 +92,7 @@ orderSchema.index({ createdAt: -1 });
 // Generate order number before saving
 orderSchema.pre("save", async function (next) {
   if (this.isNew) {
-    const counter = await mongoose.model("Counter").findOneAndUpdate(
+    const counter = await Counter.findOneAndUpdate(
       { name: "orderNumber" },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }

@@ -22,7 +22,7 @@ const authSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "member"],
+      enum: ["admin", "client"],
       required: true,
     },
     image: {
@@ -32,11 +32,6 @@ const authSchema = new mongoose.Schema(
     refreshToken: { type: String, default: null },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
-
-    // Membership Fields
-    //------------------
-    isDonor: { type: Boolean, default: false },
-    status: { type: String, enum: ["enabled", "disabled"], default: "enabled" },
   },
   { timestamps: true }
 );

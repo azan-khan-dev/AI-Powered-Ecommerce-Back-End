@@ -11,6 +11,8 @@ const config = Object.freeze({
   RESET_PASSWORD_URL: process.env.RESET_PASSWORD_URL,
   LOGIN_URL: process.env.LOGIN_URL,
 
+  FRONTEND_URL: process.env.FRONTEND_URL,
+
   // jwt token credentials
   // ---------------------
   ACCESS_TOKEN_EXPIRY_TIME: process.env.ACCESS_TOKEN_EXPIRY_TIME,

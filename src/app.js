@@ -7,6 +7,8 @@ import CategoryRoutes from "./routes/category.routes.js";
 import OrderRoutes from "./routes/order.routes.js";
 import DashboardRoutes from "./routes/dashboard.routes.js";
 import HomeRoutes from "./routes/home.routes.js";
+import StripeWebhookRoutes from "./routes/stripe-webhook.routes.js";
+import WishlistRoutes from "./routes/wishlist.routes.js";
 import cors from "cors";
 import morgan from "morgan";
 import http from "http";
@@ -35,27 +37,21 @@ app.use(
 app.use(morgan("dev"));
 app.use(cookieParser());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
-app.use("/logos", express.static(path.join(__dirname, "public/logos")));
+// app.use("/logos", express.static(path.join(__dirname, "public/logos")));
 
 //Exclude Parse Webhook
+// Stripe webhook MUST be raw
+app.use(
+  "/api/stripeWebhook",
+  express.raw({ type: "application/json" })
+);
 
-app.use((req, res, next) => {
-  if (req.originalUrl === "/api/payments/webhook") {
-    next();
-  } else {
-    express.json()(req, res, next);
-  }
-});
-app.use((req, res, next) => {
-  if (req.originalUrl === "/api/payments/webhook") {
-    next();
-  } else {
-    express.urlencoded({ extended: true })(req, res, next);
-  }
-});
+// Normal body parsing for rest
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // attach io to req for controllers
 //================================
@@ -75,7 +71,8 @@ app.use("/api/categories", CategoryRoutes);
 app.use("/api/orders", OrderRoutes);
 app.use("/api/dashboard", DashboardRoutes);
 app.use("/api/home", HomeRoutes);
-
+app.use("/api/wishlist", WishlistRoutes);
+app.use("/api/stripeWebhook", StripeWebhookRoutes);
 console.log("sockets ids", userSockets);
 // error handler
 //=============
