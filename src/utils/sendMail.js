@@ -4,10 +4,7 @@ import { getEnv } from "../configs/config.js";
 const transporter = nodemailer.createTransport({
   host: getEnv("NODEMAILER_HOST"),
   port: parseInt(getEnv("NODEMAILER_PORT")),
-  port: 587,
-  secure: false,
-  // port: 465,
-  // secure: true,
+  secure: parseInt(getEnv("NODEMAILER_PORT")) === 465, // true for 465, false for other ports
   auth: {
     user: getEnv("NODEMAILER_USER"),
     pass: getEnv("NODEMAILER_PASSWORD"),
