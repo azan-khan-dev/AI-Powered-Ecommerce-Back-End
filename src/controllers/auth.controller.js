@@ -6,15 +6,15 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { CustomError } from "../utils/customError.js";
 import { returnMailPage } from "../utils/htmlPages.js";
 import { JWTService } from "../utils/jwtService.js";
-import { sendMail } from "../utils/sendMail.js";
+import { sendMail } from "../utils/resendMail.js";
 import { sendToken } from "../utils/sendToken.js";
 import {
-removeFromCloudinary,
-uploadOnCloudinary,
+  removeFromCloudinary,
+  uploadOnCloudinary,
 } from "../utils/cloudinary.js";
 import {
-accessTokenOptions,
-refreshTokenOptions,
+  accessTokenOptions,
+  refreshTokenOptions,
 } from "../configs/constants.js";
 
 // create admin
